@@ -1,0 +1,44 @@
+services:
+  # 1. PostgreSQL Database Service
+  - type: postgres
+    name: health-companion-db
+    databaseName: healthcompanion
+    user: postgres
+    plan: free
+
+  # 2. Spring Boot Backend Web Service
+  - type: web
+    name: health-companion-backend
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: postgres
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: health-companion-db
+          property: connectionString
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
+
+  # 3. Static / Container Frontend Web Service
+  - type: web
+    name: health-companion-frontend
+    runtime: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: health-companion-backend
+          property: host
