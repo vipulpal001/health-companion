@@ -1,6 +1,6 @@
 import type { HealthProfile, MedicineInfo, LibraryItem } from '../types';
 
-const API_BASE = '/api';
+const API_BASE = (import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api');
 
 // Fallback initial demo profile
 export const initialHealthProfile: HealthProfile = {
